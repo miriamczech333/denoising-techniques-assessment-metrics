@@ -89,6 +89,20 @@ def background_offset_apply(original_images, background_offset):
     return new_original_images
 
 # 2c.
+def gaussian_beam_apply(original_images):
+    #1. guassian beam mask based on 256x256 coordinates
+    x = np.linspace(-0.6, 0.6, 256)
+    y = np.linspace(-0.6, 0.6, 256)
+    xx, yy = np.meshgrid(x, y)
+    zz = np.exp(-(xx**2 + yy**2))
+
+    mask = torch.tensor(zz)
+    mask = mask.expand(original_images.shape)
+    #2. overlaying the mask somehow over the image 
+    new_original_images = torch.mul(mask, original_images)
+    return new_original_images
+
+# 2d.
 def noise_apply(original_images):
     noisy_images = torch.poisson(original_images) 
     return noisy_images
@@ -219,6 +233,8 @@ def plot_stats_NOISE_NETWORK_comparison(noise_metrics_stats_data, metric_stats_d
 
 # 6. a function for plotting obtained statistics 
 def plot_stats_single_blob(metric_stats_data, indices, metric_name): 
+    cmap = cm.get_cmap(name='rainbow')
+
     values = metric_stats_data[:,:,0]
     std = metric_stats_data[:,:,1]
     
