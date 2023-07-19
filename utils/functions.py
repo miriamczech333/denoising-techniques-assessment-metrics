@@ -41,35 +41,28 @@ def varying_blob_quantities_img_series_generate(series_size, blobs_population_si
          
         for i in range(0, series_size):
             # generating random blob coordinates
-            
             blobs_coordinates_i_list = []
             for blob in range(0,int(blobs_population_sizes[idx].item())): 
                 blobs_coordinates_i_list.append(rand_x_y(image_dimensions))
             blobs_coordinates_i_tensor = torch.tensor(blobs_coordinates_i_list).to(global_vars.device)
 
-            #now expand spot_pos so has same size as coords except for not being coords
-            #this is creating xc and yc everywhere
+            # expand spot_pos so has same size as coords except for not being coords
+            # this is creating xc and yc everywhere
             blobs_coordinates_i_tensor = blobs_coordinates_i_tensor.unsqueeze(1).unsqueeze(2).expand(*coordinates.shape)
 
-            #now subtract the two so you have x-xc and y-yc everywhere
-            #sum across last dimension to get thing for exponent
-
-            #CHANGE - delete the '+10' at the end 
+            # subtract the two so you have x-xc and y-yc everywhere
+            # sum across last dimension to get thing for exponent
             image = (torch.exp((-((blobs_coordinates_i_tensor - coordinates)**2).sum(3))/(2*sigma**2))).sum(0)
             # peak being almost the same as background 
             
             # append a single image 
             distinct_blob_quantities[idx,i,:,:] = image
-
-            plt.clf()
-            plt.imshow(image.cpu())
-            plt.show() 
         
     return distinct_blob_quantities
 
-# 1 ALTERNATIVE. Generating series of images (of size 'repetition_number') with randomly located points in n different quantities as specified in the 'population_blobs'
-# output: [tensor]; shape = [blobs_population_sizes.shape[0], series_size.shape[0], image_dimensions[0], image_dimensions[1]]
-def varying_blob_quantities_img_series_generate_plus_one(series_size, my_range, image_dimensions): 
+# 1 ALTERNATIVE. Generating series (in the qunatity equal to 'series_quantity') of images, each of size max('my_range')+1, where each consecutive image in a series has got a single more randomly added blob relative to the previous image 
+# output: [tensor]; shape = [series_quantity, blobs_population_sizes.shape[0], series_size.shape[0], image_dimensions[0], image_dimensions[1]]
+def varying_blob_quantities_img_series_generate_plus_one(series_quantity, my_range, image_dimensions): 
     xinds = torch.arange(image_dimensions[1]).unsqueeze(0).expand(image_dimensions).to(global_vars.device)
     yinds = torch.arange(image_dimensions[0]).unsqueeze(1).expand(image_dimensions).to(global_vars.device)
     
@@ -82,9 +75,9 @@ def varying_blob_quantities_img_series_generate_plus_one(series_size, my_range, 
     # across dim 0 - different blob amounts - each image built based on the previous one
     # each series - differnet random configuration (each series independent of all other)
     # TODO: check with Sian whether I should impose the restriction of blobs not overlapping 
-    distinct_blob_quantities = torch.zeros(series_size,max(my_range).item()+1,image_dimensions[0],image_dimensions[0])
+    distinct_blob_quantities = torch.zeros(series_quantity,max(my_range).item()+1,image_dimensions[0],image_dimensions[0])
     
-    for i in range(series_size):
+    for i in range(series_quantity):
         coordinates = torch.tensor(0)
         for idx in range(max(my_range)+1):
             coordinates_a = coordinates_orig.unsqueeze(0).expand(idx,*image_dimensions,2)
@@ -102,7 +95,6 @@ def varying_blob_quantities_img_series_generate_plus_one(series_size, my_range, 
                 image = torch.zeros(*image_dimensions)
             else: 
                 image = (torch.exp((-((coordinates - coordinates_a)**2).sum(3))/(2*sigma**2))).sum(0)
-                # peak being almost the same as background 
             
             # append a single image 
             distinct_blob_quantities[i,idx,:,:] = image
@@ -156,7 +148,7 @@ def indices_generate(noised_images):
     indices = torch.stack((blobs_indices, peaks_indices))
     return indices
 
-# 3 ALTERNATIVE. Generating indices 
+# 3 ALTERNATIVE. Generating indices for EVAL type 2 
 def indices_generate_plus_one(noised_images):
     blobs_indices = global_vars.blobs_population_sizes.unsqueeze(0).expand(noised_images[:,0,:,0,0].shape)
     peaks_indices = global_vars.peak_values.unsqueeze(1).expand(noised_images[:,0,:,0,0].shape)
