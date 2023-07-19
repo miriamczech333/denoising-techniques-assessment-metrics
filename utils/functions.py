@@ -17,7 +17,7 @@ from denoising_assessment_project.global_vars import global_vars
 # 0 dim = y dim = height dim 
 # 1 dim = x dim = width dim 
 
-# random blob coordinates generation 
+# random blob coordinates generation
 def rand_x_y(image_dimensions):
     return [random.randint(0, image_dimensions[0]-1), random.randint(0, image_dimensions[1]-1)]
 
@@ -67,6 +67,48 @@ def varying_blob_quantities_img_series_generate(series_size, blobs_population_si
         
     return distinct_blob_quantities
 
+# 1 ALTERNATIVE. Generating series of images (of size 'repetition_number') with randomly located points in n different quantities as specified in the 'population_blobs'
+# output: [tensor]; shape = [blobs_population_sizes.shape[0], series_size.shape[0], image_dimensions[0], image_dimensions[1]]
+def varying_blob_quantities_img_series_generate_plus_one(series_size, my_range, image_dimensions): 
+    xinds = torch.arange(image_dimensions[1]).unsqueeze(0).expand(image_dimensions).to(global_vars.device)
+    yinds = torch.arange(image_dimensions[0]).unsqueeze(1).expand(image_dimensions).to(global_vars.device)
+    
+    # spot size sigma
+    sigma = 5
+
+    # need to create xinds yinds pairs, squodged together across dimension 3
+    coordinates_orig = torch.stack((xinds,yinds),2)
+
+    # across dim 0 - different blob amounts - each image built based on the previous one
+    # each series - differnet random configuration (each series independent of all other)
+    # TODO: check with Sian whether I should impose the restriction of blobs not overlapping 
+    distinct_blob_quantities = torch.zeros(series_size,max(my_range).item()+1,image_dimensions[0],image_dimensions[0])
+    
+    for i in range(series_size):
+        coordinates = torch.tensor(0)
+        for idx in range(max(my_range)+1):
+            coordinates_a = coordinates_orig.unsqueeze(0).expand(idx,*image_dimensions,2)
+            single_coordinates = rand_x_y(image_dimensions)
+            single_coordinates_tensor = torch.tensor(single_coordinates).to(global_vars.device).unsqueeze(0).expand(*image_dimensions,2)
+
+            if idx == 0 or idx == 1:
+                coordinates = single_coordinates_tensor
+            elif idx == 2:
+                coordinates = torch.cat((coordinates.unsqueeze(0), single_coordinates_tensor.unsqueeze(0)), dim=0)
+            else: 
+                coordinates = torch.cat((coordinates, single_coordinates_tensor.unsqueeze(0)))
+            
+            if idx == 0: 
+                image = torch.zeros(*image_dimensions)
+            else: 
+                image = (torch.exp((-((coordinates - coordinates_a)**2).sum(3))/(2*sigma**2))).sum(0)
+                # peak being almost the same as background 
+            
+            # append a single image 
+            distinct_blob_quantities[i,idx,:,:] = image
+        
+    return distinct_blob_quantities
+
 # 2. Generating images with a varying noise for peak values as specified in the 'noise_peak_values' tensor
 # output: a vector of 4 tensors [noised_images, pre_noised_images, noised_images_indices_peaks, noised_images_indices_blobs]
 # 2a. 
@@ -111,6 +153,13 @@ def noise_apply(original_images):
 def indices_generate(noised_images):
     blobs_indices = global_vars.blobs_population_sizes.unsqueeze(0).expand(noised_images[:,:,0,0,0].shape)
     peaks_indices = global_vars.peak_values.unsqueeze(1).expand(noised_images[:,:,0,0,0].shape)
+    indices = torch.stack((blobs_indices, peaks_indices))
+    return indices
+
+# 3 ALTERNATIVE. Generating indices 
+def indices_generate_plus_one(noised_images):
+    blobs_indices = global_vars.blobs_population_sizes.unsqueeze(0).expand(noised_images[:,0,:,0,0].shape)
+    peaks_indices = global_vars.peak_values.unsqueeze(1).expand(noised_images[:,0,:,0,0].shape)
     indices = torch.stack((blobs_indices, peaks_indices))
     return indices
 
