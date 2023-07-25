@@ -12,7 +12,6 @@ import matplotlib.cm as cm
 import pickle
 
 from denoising_assessment_project.global_vars import global_vars
-
 from denoising_assessment_project.utils import stats_compare
 
 # 6. - EVAL default: a function for plotting obtained statistics 
