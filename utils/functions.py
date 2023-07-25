@@ -21,7 +21,7 @@ from denoising_assessment_project.global_vars import global_vars
 def rand_x_y(image_dimensions):
     return [random.randint(0, image_dimensions[0]-1), random.randint(0, image_dimensions[1]-1)]
 
-# 1. Generating series of images (of size 'repetition_number') with randomly located points in n different quantities as specified in the 'population_blobs'
+# 1. - EVAL default: Generating series of images (of size 'repetition_number') with randomly located points in n different quantities as specified in the 'population_blobs'
 # output: [tensor]; shape = [blobs_population_sizes.shape[0], series_size.shape[0], image_dimensions[0], image_dimensions[1]]
 def varying_blob_quantities_img_series_generate(series_size, blobs_population_sizes, image_dimensions): 
     xinds = torch.arange(image_dimensions[1]).unsqueeze(0).expand(image_dimensions).to(global_vars.device)
@@ -60,7 +60,7 @@ def varying_blob_quantities_img_series_generate(series_size, blobs_population_si
         
     return distinct_blob_quantities
 
-# 1 ALTERNATIVE. Generating series (in the qunatity equal to 'series_quantity') of images, each of size max('my_range')+1, where each consecutive image in a series has got a single more randomly added blob relative to the previous image 
+# 1. - EVAL type 2: Generating series (in the qunatity equal to 'series_quantity') of images, each of size max('my_range')+1, where each consecutive image in a series has got a single more randomly added blob relative to the previous image 
 # output: [tensor]; shape = [series_quantity, blobs_population_sizes.shape[0], series_size.shape[0], image_dimensions[0], image_dimensions[1]]
 def varying_blob_quantities_img_series_generate_plus_one(series_quantity, my_range, image_dimensions): 
     xinds = torch.arange(image_dimensions[1]).unsqueeze(0).expand(image_dimensions).to(global_vars.device)
@@ -73,8 +73,7 @@ def varying_blob_quantities_img_series_generate_plus_one(series_quantity, my_ran
     coordinates_orig = torch.stack((xinds,yinds),2)
 
     # across dim 0 - different blob amounts - each image built based on the previous one
-    # each series - differnet random configuration (each series independent of all other)
-    # TODO: check with Sian whether I should impose the restriction of blobs not overlapping 
+    # each series - differnet random configuration (each series independent of all other
     distinct_blob_quantities = torch.zeros(series_quantity,max(my_range).item()+1,image_dimensions[0],image_dimensions[0])
     
     for i in range(series_quantity):
@@ -141,14 +140,14 @@ def noise_apply(original_images):
     noisy_images = torch.poisson(original_images) 
     return noisy_images
 
-# 3. Generating indices 
+# 3. - EVAL default: Generating indices 
 def indices_generate(noised_images):
     blobs_indices = global_vars.blobs_population_sizes.unsqueeze(0).expand(noised_images[:,:,0,0,0].shape)
     peaks_indices = global_vars.peak_values.unsqueeze(1).expand(noised_images[:,:,0,0,0].shape)
     indices = torch.stack((blobs_indices, peaks_indices))
     return indices
 
-# 3 ALTERNATIVE. Generating indices for EVAL type 2 
+# 3. - EVAL type 2: Generating indices
 def indices_generate_plus_one(noised_images):
     blobs_indices = global_vars.blobs_population_sizes.unsqueeze(0).expand(noised_images[:,0,:,0,0].shape)
     peaks_indices = global_vars.peak_values.unsqueeze(1).expand(noised_images[:,0,:,0,0].shape)
@@ -163,17 +162,23 @@ def set_mean_std_compute(metric_output):
     stats = torch.stack((mean,std),dim=2)
     return stats
 
+# torch.Size([1, 20, 51, 256, 256])
+def set_mean_std_compute_t2(metric_output):
+    mean = torch.mean(metric_output, dim=1)
+    std = torch.std(metric_output, dim=1)
+    stats = torch.stack((mean,std),dim=1)
+    return stats
+
 # 6. a function for plotting obtained statistics 
 def plot_stats(metric_stats_data, indices, metric_name): 
     values = metric_stats_data[:,:,0]
     std = metric_stats_data[:,:,1]
+    print(values.shape)
 
-    # generating a plot with mean values for the metric for all datasets 
-    #%matplotlib notebook
- 
+    # generating a plot with mean values for the metric for all datasets
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-
+    
     ax.scatter(indices[0,:,:], indices[1,:,:], values)
     ax.scatter(indices[0,:,:], indices[1,:,:], values+std, marker="*", c="red")
     ax.scatter(indices[0,:,:], indices[1,:,:],values-std, marker="*", c="red")
@@ -200,6 +205,23 @@ def plot_stats(metric_stats_data, indices, metric_name):
     plt.show()
     return
 
+# 6. EVAL t2 - a function for plotting obtained statistics 
+def plot_stats_t2(metric_stats_data, indices, metric_name): 
+    values = metric_stats_data[:,0,:]
+    std = metric_stats_data[:,1,:]
+    print(values.shape)
+
+    cmap = cm.get_cmap(name='rainbow')
+
+    fig = plt.figure()
+    plt.errorbar(indices[0,0,:], values[0,:], yerr=std[0,:], color=cmap(15), fmt='o', capsize=5, markersize=2, elinewidth=1)
+    plt.title('mean {} values - varying blob amounts [purple-3, red-288] \n background value = 10'.format(metric_name))
+    plt.xlabel('peak value')
+    plt.ylabel('mean {} value'.format(metric_name))
+    plt.show()
+    return
+
+# TODO: DESCRIPTION 
 def identify_BETTER_and_WORSE(noise_metrics_stats_data, metric_stats_data, metric): 
     values = metric_stats_data[:,:,0]
     std = metric_stats_data[:,:,1]
@@ -229,7 +251,7 @@ def identify_BETTER_and_WORSE(noise_metrics_stats_data, metric_stats_data, metri
         raise Exception("Unsupported metric")
     return [values_BETTER, std_BETTER, values_WORSE, std_WORSE]
 
-# 6B. a function for plotting a network's metric statistics in comparison to GTvsNOISE statistics
+# 6B. a function for plotting a network's metric statistics in comparison to GTvsNOISE statistics (or some other statistics for the same analysed space for the parameters of interest)
 def plot_stats_NOISE_NETWORK_comparison(noise_metrics_stats_data, metric_stats_data, indices, metric_name):
     output = identify_BETTER_and_WORSE(noise_metrics_stats_data, metric_stats_data, metric_name)
     values_BETTER = output[0]
@@ -272,6 +294,7 @@ def plot_stats_NOISE_NETWORK_comparison(noise_metrics_stats_data, metric_stats_d
     plt.show()
     return
 
+# TODO: is it still needed? 
 # 6. a function for plotting obtained statistics 
 def plot_stats_single_blob(metric_stats_data, indices, metric_name): 
     cmap = cm.get_cmap(name='rainbow')
@@ -290,6 +313,19 @@ def plot_stats_single_blob(metric_stats_data, indices, metric_name):
 # a function for calculating NRMSE for a pair of pictures (original and noised)
 def NRMSE_compute(un_noised_images, noised_images): 
     error = torch.sub(un_noised_images, noised_images)
+    SE = torch.pow(error,2)
+    MSE = torch.mean(SE,dim=[3,4])
+    RMSE = torch.pow(MSE,0.5)
+    mean = torch.mean(un_noised_images, dim=[3,4])
+    NRMSE = torch.div(RMSE, mean)
+    return NRMSE
+
+
+# 4a. ALTERNATIVE NRMSE computing function 
+# a function for calculating NRMSE for a pair of pictures (original and noised)
+def NRMSE_compute_alternative(noised_images): 
+    noised_images_50blobs = noised_images[:,:,51,:,:].expand(noised_images.shape)
+    error = torch.sub(noised_images_50blobs, noised_images)
     SE = torch.pow(error,2)
     MSE = torch.mean(SE,dim=[3,4])
     RMSE = torch.pow(MSE,0.5)
