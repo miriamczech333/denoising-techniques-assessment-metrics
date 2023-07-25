@@ -13,6 +13,8 @@ import pickle
 
 from denoising_assessment_project.global_vars import global_vars
 
+from denoising_assessment_project.utils import stats_compare
+
 # 6. - EVAL default: a function for plotting obtained statistics 
 def plot_stats(metric_stats_data, indices, metric_name): 
     values = metric_stats_data[:,:,0]
@@ -69,7 +71,7 @@ def plot_stats_t2(metric_stats_data, indices, metric_name):
 
 # 6B. a function for plotting a network's metric statistics in comparison to GTvsNOISE statistics (or some other statistics for the same analysed space for the parameters of interest)
 def plot_stats_NOISE_NETWORK_comparison(noise_metrics_stats_data, metric_stats_data, indices, metric_name):
-    output = identify_BETTER_and_WORSE(noise_metrics_stats_data, metric_stats_data, metric_name)
+    output = stats_compare.identify_BETTER_and_WORSE(noise_metrics_stats_data, metric_stats_data, metric_name)
     values_BETTER = output[0]
     std_BETTER = output[1]
     values_WORSE = output[2]
