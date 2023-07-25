@@ -54,8 +54,8 @@ def plot_stats_t2(metric_stats_data, indices, metric_name):
     
     fig = plt.figure()
     plt.errorbar(indices[0,0,:], values[0,:], yerr=std[0,:], color=cmap(15), fmt='o', capsize=5, markersize=2, elinewidth=1)
-    plt.title('mean {} values - varying blob amounts [purple-3, red-288] \n background value = 10'.format(metric_name))
-    plt.xlabel('peak value')
+    plt.title('mean {} values'.format(metric_name))
+    plt.xlabel('the blob number of the image the 50-blob image is compared to')
     plt.ylabel('mean {} value'.format(metric_name))
     plt.show()
     return
