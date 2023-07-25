@@ -2,8 +2,6 @@ import torch
 
 import numpy as np
 
-from denoising_assessment_project.global_vars import global_vars
-
 # TODO: DESCRIPTION 
 def identify_BETTER_and_WORSE_NaN(noise_metrics_stats_data, metric_stats_data, metric): 
     values = metric_stats_data[:,:,0]

@@ -3,8 +3,6 @@ import torch
 import random
 import numpy as np
 
-from denoising_assessment_project.global_vars import global_vars
-
 # TODO: CHECK X VS Y AND CONSISTENTCY THROUGHOUT
 # 0 dim = y dim = height dim 
 # 1 dim = x dim = width dim 

@@ -1,7 +1,5 @@
 import torch
 
-from denoising_assessment_project.global_vars import global_vars
-
 from torchmetrics import PeakSignalNoiseRatio
 import skimage.metrics as metrics
 from skimage import io

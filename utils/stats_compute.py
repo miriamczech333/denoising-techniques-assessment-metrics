@@ -1,7 +1,5 @@
 import torch
 
-#from denoising_assessment_project.global_vars import global_vars
-
 # 5. - EVAL default: a function computing for each set the mean and std of some metric scores for each set inputted 
 # output: mean and std for the metric for each set 
 def set_mean_std_compute(metric_output):
