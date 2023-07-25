@@ -190,16 +190,20 @@ def plot_stats(metric_stats_data, indices, metric_name):
     cmap = cm.get_cmap(name='rainbow')
 
     fig2 = plt.figure()
+    bottom = indices[1,0,0]
+    upper = indices[1,-1,0]
     for i in range(values.shape[1]):
         plt.errorbar(indices[1,:,0], values[:,i], yerr=std[:,i], color=cmap(i*15), fmt='o', capsize=5, markersize=2, elinewidth=1)
-    plt.title('mean {} values - varying blob amounts [purple-3, red-288] \n background value = 10'.format(metric_name))
+    plt.title('mean {} values - varying blob amounts [purple-{}, red-{}] \n background value = 10'.format(metric_name, bottom, upper))
     plt.xlabel('peak value')
     plt.ylabel('mean {} value'.format(metric_name))
 
     fig3 = plt.figure()
+    bottom = indices[0,0,0]
+    upper = indices[0,0,-1]
     for i in range(values.shape[0]):
         plt.errorbar(indices[0,0,:], values[i,:], yerr=std[i,:], color=cmap(i*15), fmt='o', capsize=5, markersize=2, elinewidth=1)
-    plt.title('mean {} values - varying peak values [purple-10, red-960] \n background value = 10'.format(metric_name))
+    plt.title('mean {} values - varying peak values [purple-{}, red-{}] \n background value = 10'.format(metric_name, bottom, upper))
     plt.xlabel('blob number')
     plt.ylabel('mean {} value'.format(metric_name))
     plt.show()
@@ -275,20 +279,24 @@ def plot_stats_NOISE_NETWORK_comparison(noise_metrics_stats_data, metric_stats_d
     cmap = cm.get_cmap(name='rainbow')
     
     fig2 = plt.figure()
+    bottom = indices[1,0,0]
+    upper = indices[1,-1,0]
     for i in range(values_BETTER.shape[1]):
         plt.errorbar(indices[1,:,0], values_BETTER[:,i], yerr=std_BETTER[:,i], color=cmap(i*15), fmt='o', capsize=5, markersize=2, elinewidth=1)
     for i in range(values_WORSE.shape[1]):
         plt.errorbar(indices[1,:,0], values_WORSE[:,i], yerr=std_WORSE[:,i], color="gray", fmt='o', capsize=5, markersize=2, elinewidth=1)
-    plt.title('mean {} values - varying blob amounts [purple-3, red-288] \n background value = 10'.format(metric_name))
+    plt.title('mean {} values - varying blob amounts [purple-{}, red-{}] \n background value = 10'.format(metric_name, bottom, upper))
     plt.xlabel('peak value')
     plt.ylabel('mean {} value'.format(metric_name))
     
     fig3 = plt.figure()
+    bottom = indices[0,0,0]
+    upper = indices[0,0,-1]
     for i in range(values_BETTER.shape[0]):
         plt.errorbar(indices[0,0,:], values_BETTER[i,:], yerr=std_BETTER[i,:], color=cmap(i*15), fmt='o', capsize=5, markersize=2, elinewidth=1)
     for i in range(values_WORSE.shape[0]):
         plt.errorbar(indices[0,0,:], values_WORSE[i,:], yerr=std_WORSE[i,:], color="gray", fmt='o', capsize=5, markersize=2, elinewidth=1)
-    plt.title('mean {} values - varying peak values [purple-10, red-960] \n background value = 10'.format(metric_name))
+    plt.title('mean {} values - varying peak values [purple-{}, red-{}] \n background value = 10'.format(metric_name, bottom, upper))
     plt.xlabel('blob number')
     plt.ylabel('mean {} value'.format(metric_name))
     plt.show()
