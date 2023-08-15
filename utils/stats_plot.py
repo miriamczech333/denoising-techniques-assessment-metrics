@@ -26,8 +26,8 @@ def plot_stats(metric_stats_data, indices, metric_name):
     cmap = cm.get_cmap(name='rainbow')
 
     fig2 = plt.figure()
-    bottom = indices[1,0,0]
-    upper = indices[1,-1,0]
+    bottom = indices[0,0,0]
+    upper = indices[0,0,-1]
     for i in range(values.shape[1]):
         plt.errorbar(indices[1,:,0], values[:,i], yerr=std[:,i], color=cmap(i*15), fmt='o', capsize=5, markersize=2, elinewidth=1)
     plt.title('mean {} values - varying blob amounts [purple-{}, red-{}] \n background value = 10'.format(metric_name, bottom, upper))
@@ -35,8 +35,8 @@ def plot_stats(metric_stats_data, indices, metric_name):
     plt.ylabel('mean {} value'.format(metric_name))
 
     fig3 = plt.figure()
-    bottom = indices[0,0,0]
-    upper = indices[0,0,-1]
+    bottom = indices[1,0,0]
+    upper = indices[1,-1,0]
     for i in range(values.shape[0]):
         plt.errorbar(indices[0,0,:], values[i,:], yerr=std[i,:], color=cmap(i*15), fmt='o', capsize=5, markersize=2, elinewidth=1)
     plt.title('mean {} values - varying peak values [purple-{}, red-{}] \n background value = 10'.format(metric_name, bottom, upper))

@@ -10,9 +10,9 @@ from torchmetrics import MultiScaleStructuralSimilarityIndexMeasure
 def NRMSE_compute(un_noised_images, noised_images): 
     error = torch.sub(un_noised_images, noised_images)
     SE = torch.pow(error,2)
-    MSE = torch.mean(SE,dim=[3,4])
+    MSE = torch.nanmean(SE,dim=[-2,-1])
     RMSE = torch.pow(MSE,0.5)
-    mean = torch.mean(un_noised_images, dim=[3,4])
+    mean = torch.nanmean(un_noised_images, dim=[-2,-1])
     NRMSE = torch.div(RMSE, mean)
     return NRMSE
 
@@ -21,7 +21,7 @@ def NRMSE_compute(un_noised_images, noised_images):
 def RMSE_compute(un_noised_images, noised_images): 
     error = un_noised_images - noised_images
     SE = torch.pow(error,2)
-    MSE = torch.mean(SE,dim=[3,4])
+    MSE = torch.nanmean(SE,dim=[-2,-1])
     RMSE = torch.pow(MSE,0.5)
     return RMSE
 
@@ -41,7 +41,9 @@ def PSNR_compute(un_noised_images, noised_images):
             dim_i_list = []
             for i in range(0, noised_images.shape[2]):
                 # metric - un noised vs noised 
-                a = psnr(un_noised_images[dim_0, dim_1, i, :, :], noised_images[dim_0, dim_1, i, :, :])
+                arg_1 = un_noised_images[dim_0, dim_1, i, :, :]
+                arg_2 = noised_images[dim_0, dim_1, i, :, :]
+                a = psnr(arg_1[~arg_1.isnan()], arg_2[~arg_2.isnan()])
                 dim_i_list.append(a)
             dim_i_tensor = torch.stack(dim_i_list)
             dim_1_list.append(dim_i_tensor)
@@ -58,8 +60,8 @@ def ssim(original_image, noised_image):
     original_image = original_image/ original_image.max()
     noised_image = noised_image/ noised_image.max()
     
-    mean_original = torch.mean(original_image)
-    mean_noised = torch.mean(noised_image)
+    mean_original = torch.nanmean(original_image)
+    mean_noised = torch.nanmean(noised_image)
     sigma_original = torch.std(original_image)
     sigma_noised = torch.std(noised_image)
     
@@ -79,7 +81,9 @@ def SSIM_compute(un_noised_images, noised_images):
             dim_i_list = []
             for i in range(0, noised_images.shape[2]):
                 # metric - un noised vs noised 
-                a = ssim(un_noised_images[dim_0, dim_1, i, :, :], noised_images[dim_0, dim_1, i, :, :])
+                arg_1 = un_noised_images[dim_0, dim_1, i, :, :]
+                arg_2 = noised_images[dim_0, dim_1, i, :, :]
+                a = ssim(arg_1[~arg_1.isnan()], arg_2[~arg_2.isnan()])
                 dim_i_list.append(a)
             dim_i_tensor = torch.stack(dim_i_list)
             dim_1_list.append(dim_i_tensor)
@@ -94,7 +98,7 @@ def SSIM_compute(un_noised_images, noised_images):
 # function for calculating MS_SSIM per pair of pictures 
 ms_ssim = MultiScaleStructuralSimilarityIndexMeasure(kernel_size=7,sigma = 1.5,data_range=1.0)
 
-def ms_ssim(original_image, noised_image):
+def my_ms_ssim(original_image, noised_image):
     # metric - original image vs one of the theree noised imaged 
     # adjusting the dimensions to those requested by the function (and analogically to the metrics notebook from Susan)
     original_image = original_image.unsqueeze(0).unsqueeze(0)
@@ -118,7 +122,9 @@ def MS_SSIM_compute(un_noised_images, noised_images):
             dim_i_list = []
             for i in range(0, noised_images.shape[2]):
                 # metric - un noised vs noised 
-                a = ms_ssim(un_noised_images[dim_0, dim_1, i, :, :], noised_images[dim_0, dim_1, i, :, :])
+                arg_1 = un_noised_images[dim_0, dim_1, i, :, :]
+                arg_2 = noised_images[dim_0, dim_1, i, :, :]
+                a = my_ms_ssim(arg_1[~arg_1.isnan()], arg_2[~arg_2.isnan()])
                 dim_i_list.append(a)
             dim_i_tensor = torch.stack(dim_i_list)
             dim_1_list.append(dim_i_tensor)
